@@ -206,6 +206,7 @@ Loop:
 		select {
 		case <-s:
 			cancel()
+			ppl.Close()
 			break Loop
 		}
 	}

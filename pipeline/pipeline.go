@@ -22,6 +22,7 @@ type Pipeline struct {
 	nodes     map[string]*NodeLink //map[node-name]NodeLink
 	linkNodes map[string][]string  //map[current][]string{child1,child2...}
 	lnMux     sync.Mutex
+	wg        sync.WaitGroup
 }
 
 func NewPipeline() *Pipeline {
@@ -40,14 +41,14 @@ func (p *Pipeline) Add(parent, current string, node Node) *Pipeline {
 		//means this is a root node
 		log.Panicln("luck of parent node!")
 	} else if parent != "" && current != "" {
-		nodeLink.name=current
+		nodeLink.name = current
 		p.lnMux.Lock()
 		defer p.lnMux.Unlock()
 		p.linkNodes[parent] = append(p.linkNodes[parent], current)
 		p.nodes[current] = nodeLink
 	} else {
 		//means this is a root node
-		nodeLink.name=parent
+		nodeLink.name = parent
 		p.nodes[parent] = nodeLink
 	}
 	return p
@@ -161,10 +162,12 @@ func (p *Pipeline) Run(ctx context.Context) {
 	if l == 1 {
 		go func() {
 			for _, item := range p.nodes {
+				p.wg.Add(1)
 				go func(it *NodeLink) {
 					args := []reflect.Value{reflect.ValueOf(ctx)}
 					reflect.ValueOf(it.node).MethodByName("Run").Call(args)
-					log.Println(it.name," run exit!")
+					log.Println("[node:", it.name, "] run exit!")
+					p.wg.Done()
 				}(item)
 			}
 		}()
@@ -193,10 +196,16 @@ func (p *Pipeline) Run(ctx context.Context) {
 
 	//call all node Run function
 	for _, item := range p.nodes {
+		p.wg.Add(1)
 		go func(it *NodeLink) {
 			args := []reflect.Value{reflect.ValueOf(ctx)}
 			reflect.ValueOf(it.node).MethodByName("Run").Call(args)
-			log.Println(it.name," run exit!")
+			log.Println("[node:", it.name, "] run exit!")
+			p.wg.Done()
 		}(item)
 	}
+}
+
+func (p *Pipeline) Close() {
+	p.wg.Wait()
 }
