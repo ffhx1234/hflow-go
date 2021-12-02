@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/ffhx1234/hflow-go/pipeline"
+	v2 "github.com/ffhx1234/hflow-go/pipeline/v2"
 	"log"
 	"os"
 	"os/signal"
@@ -188,26 +190,54 @@ loop:
 }
 
 func main() {
+	version := flag.String("v", "v1", "the ppl version")
+	flag.Parse()
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt)
 	ctx, cancel := context.WithCancel(context.Background())
-	ppl := pipeline.NewPipeline()
-	ppl.Add("rtsp", "", NewRtsp())
-	ppl.Add("gb28181", "", NewGb28181())
-	decoder := NewDecoder()
-	ppl.Add("rtsp", "decoder", decoder)
-	ppl.Add("gb28181", "decoder", decoder)
-	ppl.Add("decoder", "player", NewPlayer())
-	ppl.Add("player", "vlc", NewVlc())
-	ppl.Add("player", "ffmpeg", NewFfmpeg())
-	ppl.Run(ctx)
-Loop:
-	for {
-		select {
-		case <-s:
-			cancel()
-			ppl.Close()
-			break Loop
+	if *version == "v1" {
+		ppl := pipeline.NewPipeline()
+		ppl.Add("rtsp", "", NewRtsp())
+		ppl.Add("gb28181", "", NewGb28181())
+		decoder := NewDecoder()
+		ppl.Add("rtsp", "decoder", decoder)
+		ppl.Add("gb28181", "decoder", decoder)
+		ppl.Add("decoder", "player", NewPlayer())
+		ppl.Add("player", "vlc", NewVlc())
+		ppl.Add("player", "ffmpeg", NewFfmpeg())
+		ppl.Run(ctx)
+	Loop1:
+		for {
+			select {
+			case <-s:
+				cancel()
+				ppl.Close()
+				break Loop1
+			}
 		}
+	} else if *version == "v2" {
+		ppl := v2.NewPipeline()
+		//register node
+		ppl.RegisterNode("rtsp", NewRtsp()).RegisterNode("gb28181", NewGb28181())
+		ppl.RegisterNode("decoder", NewDecoder())
+		ppl.RegisterNode("player", NewPlayer())
+		ppl.RegisterNode("vlc", NewVlc())
+		ppl.RegisterNode("ffmpeg", NewFfmpeg())
+		//connect node
+		ppl.Connect("rtsp", []string{"decoder"}).Connect("gb28181", []string{"decoder"})
+		ppl.Connect("decoder", []string{"player"})
+		ppl.Connect("player", []string{"vlc", "ffmpeg"})
+		ppl.Run(ctx)
+	Loop2:
+		for {
+			select {
+			case <-s:
+				cancel()
+				ppl.Close()
+				break Loop2
+			}
+		}
+	} else {
+		log.Panicln("no support version ", *version)
 	}
 }
