@@ -62,12 +62,12 @@ func (p *Pipeline) link(ctx context.Context, a, b Node) {
 		linkTag        string
 	)
 	if a != nil {
-		aType = reflect.TypeOf(a)
-		aValue = reflect.ValueOf(a)
+		aType = reflect.TypeOf(a).Elem()
+		aValue = reflect.ValueOf(a).Elem()
 	}
 	if b != nil {
-		bType = reflect.TypeOf(b)
-		bValue = reflect.ValueOf(b)
+		bType = reflect.TypeOf(b).Elem()
+		bValue = reflect.ValueOf(b).Elem()
 	}
 
 	//option: a.out -> b.in
@@ -107,8 +107,8 @@ func (p *Pipeline) linkMulti(ctx context.Context, a Node, b []Node) {
 		aValue, bValue reflect.Value
 	)
 	if a != nil {
-		aType = reflect.TypeOf(a)
-		aValue = reflect.ValueOf(a)
+		aType = reflect.TypeOf(a).Elem()
+		aValue = reflect.ValueOf(a).Elem()
 	}
 
 	for _, node := range b {
@@ -117,8 +117,8 @@ func (p *Pipeline) linkMulti(ctx context.Context, a Node, b []Node) {
 			linkTag     string
 		)
 		if node != nil {
-			bType = reflect.TypeOf(node)
-			bValue = reflect.ValueOf(node)
+			bType = reflect.TypeOf(node).Elem()
+			bValue = reflect.ValueOf(node).Elem()
 		}
 
 		//node b in

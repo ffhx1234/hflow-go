@@ -49,8 +49,8 @@ type Ffmpeg struct {
 	In chan Frame `source:"ffmpeg"`
 }
 
-func NewRtsp() Rtsp {
-	r := Rtsp{
+func NewRtsp() *Rtsp {
+	r := &Rtsp{
 		In:  make(chan Packet),
 		Out: make(chan Packet),
 	}
@@ -76,8 +76,8 @@ loop:
 	}
 }
 
-func NewGb28181() Gb28181 {
-	g := Gb28181{
+func NewGb28181() *Gb28181 {
+	g := &Gb28181{
 		In:  make(chan Packet),
 		Out: make(chan Packet),
 	}
@@ -102,8 +102,8 @@ loop:
 	}
 }
 
-func NewDecoder() Decoder {
-	return Decoder{
+func NewDecoder() *Decoder {
+	return &Decoder{
 		Rtsp: make(chan Packet),
 		Gb:   make(chan Packet),
 		Out:  make(chan Frame),
@@ -129,8 +129,8 @@ loop:
 	}
 }
 
-func NewPlayer() Player {
-	return Player{
+func NewPlayer() *Player {
+	return &Player{
 		In:     make(chan Frame),
 		Vlc:    make(chan Frame),
 		Ffmpeg: make(chan Frame),
@@ -155,8 +155,8 @@ loop:
 	}
 }
 
-func NewVlc() Vlc {
-	return Vlc{In: make(chan Frame)}
+func NewVlc() *Vlc {
+	return &Vlc{In: make(chan Frame)}
 }
 
 func (v Vlc) Run(ctx context.Context) {
@@ -171,8 +171,8 @@ loop:
 	}
 }
 
-func NewFfmpeg() Ffmpeg {
-	return Ffmpeg{In: make(chan Frame)}
+func NewFfmpeg() *Ffmpeg {
+	return &Ffmpeg{In: make(chan Frame)}
 }
 
 func (f Ffmpeg) Run(ctx context.Context) {
