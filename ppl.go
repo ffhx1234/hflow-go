@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/ffhx1234/hflow-go/pipeline"
-	v2 "github.com/ffhx1234/hflow-go/pipeline/v2"
+	"github.com/ffhx1234/hflow-go/pipeline/pplv1"
+	"github.com/ffhx1234/hflow-go/pipeline/pplv2"
 	"log"
 	"os"
 	"os/signal"
@@ -196,7 +196,7 @@ func main() {
 	signal.Notify(s, os.Interrupt)
 	ctx, cancel := context.WithCancel(context.Background())
 	if *version == "v1" {
-		ppl := pipeline.NewPipeline()
+		ppl := pplv1.NewPipeline()
 		ppl.Add("rtsp", "", NewRtsp())
 		ppl.Add("gb28181", "", NewGb28181())
 		decoder := NewDecoder()
@@ -216,7 +216,7 @@ func main() {
 			}
 		}
 	} else if *version == "v2" {
-		ppl := v2.NewPipeline()
+		ppl := pplv2.NewPipeline()
 		//register node
 		ppl.RegisterNode("rtsp", NewRtsp()).RegisterNode("gb28181", NewGb28181())
 		ppl.RegisterNode("decoder", NewDecoder())
